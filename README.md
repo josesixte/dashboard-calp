@@ -2,7 +2,7 @@
 
 Dashboard de consumo de energía eléctrica de la Cooperativa de Agua y Luz Pinamar Ltda., a partir de los cuadros mensuales de EDEA S.A.
 
-🔗 Publicado con GitHub Pages: se agrega el link acá una vez activado.
+🔗 Publicado con GitHub Pages: https://josesixte.github.io/dashboard-calp/
 
 ## Contenido
 
