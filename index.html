@@ -220,7 +220,124 @@
 
 <script>
 // ---- DATOS: reemplazar/ampliar cada mes con la fila nueva ----
+// Los meses de 2016 a junio-2025 vienen del resumen histórico (solo Energía Total,
+// EDEA no desglosaba Pico/Resto/Valle ni potencia en esos registros). A partir de
+// julio-2025 los datos incluyen el desglose completo del cuadro mensual de EDEA.
 const data = [
+  { periodo:"Enero-16",      total:17275865 },
+  { periodo:"Febrero-16",    total:14602824 },
+  { periodo:"Marzo-16",      total:10847416 },
+  { periodo:"Abril-16",      total:10037696 },
+  { periodo:"Mayo-16",       total:9381391 },
+  { periodo:"Junio-16",      total:9419647 },
+  { periodo:"Julio-16",      total:10357521 },
+  { periodo:"Agosto-16",     total:9267503 },
+  { periodo:"Septiembre-16", total:8609071 },
+  { periodo:"Octubre-16",    total:9007589 },
+  { periodo:"Noviembre-16",  total:8814039 },
+  { periodo:"Diciembre-16",  total:11986422 },
+  { periodo:"Enero-17",      total:16976625 },
+  { periodo:"Febrero-17",    total:14282485 },
+  { periodo:"Marzo-17",      total:10545375 },
+  { periodo:"Abril-17",      total:9330222 },
+  { periodo:"Mayo-17",       total:9007085 },
+  { periodo:"Junio-17",      total:9214580 },
+  { periodo:"Julio-17",      total:10449747 },
+  { periodo:"Agosto-17",     total:9414043 },
+  { periodo:"Septiembre-17", total:8604409 },
+  { periodo:"Octubre-17",    total:9618527 },
+  { periodo:"Noviembre-17",  total:8810451 },
+  { periodo:"Diciembre-17",  total:11566867 },
+  { periodo:"Enero-18",      total:16561460 },
+  { periodo:"Febrero-18",    total:14365627 },
+  { periodo:"Marzo-18",      total:10475558 },
+  { periodo:"Abril-18",      total:9093940 },
+  { periodo:"Mayo-18",       total:8820631 },
+  { periodo:"Junio-18",      total:9050833 },
+  { periodo:"Julio-18",      total:10473763 },
+  { periodo:"Agosto-18",     total:9317706 },
+  { periodo:"Septiembre-18", total:8189558 },
+  { periodo:"Octubre-18",    total:8591539 },
+  { periodo:"Noviembre-18",  total:8730867 },
+  { periodo:"Diciembre-18",  total:11072474 },
+  { periodo:"Enero-19",      total:16480897 },
+  { periodo:"Febrero-19",    total:13648591 },
+  { periodo:"Marzo-19",      total:10352543 },
+  { periodo:"Abril-19",      total:8836100 },
+  { periodo:"Mayo-19",       total:8651012 },
+  { periodo:"Junio-19",      total:8751150 },
+  { periodo:"Julio-19",      total:10471956 },
+  { periodo:"Agosto-19",     total:9448558 },
+  { periodo:"Septiembre-19", total:8604096 },
+  { periodo:"Octubre-19",    total:8615000 },
+  { periodo:"Noviembre-19",  total:8507855 },
+  { periodo:"Diciembre-19",  total:10862627 },
+  { periodo:"Enero-20",      total:16519851 },
+  { periodo:"Febrero-20",    total:14602014 },
+  { periodo:"Marzo-20",      total:10198700 },
+  { periodo:"Abril-20",      total:7620117 },
+  { periodo:"Mayo-20",       total:8138327 },
+  { periodo:"Junio-20",      total:8550774 },
+  { periodo:"Julio-20",      total:9350181 },
+  { periodo:"Agosto-20",     total:8715027 },
+  { periodo:"Septiembre-20", total:8269382 },
+  { periodo:"Octubre-20",    total:8184553 },
+  { periodo:"Noviembre-20",  total:8318575 },
+  { periodo:"Diciembre-20",  total:11715258 },
+  { periodo:"Enero-21",      total:15935981 },
+  { periodo:"Febrero-21",    total:12648470 },
+  { periodo:"Marzo-21",      total:11331361 },
+  { periodo:"Abril-21",      total:9403489 },
+  { periodo:"Mayo-21",       total:10043305 },
+  { periodo:"Junio-21",      total:10347119 },
+  { periodo:"Julio-21",      total:12245877 },
+  { periodo:"Agosto-21",     total:11231951 },
+  { periodo:"Septiembre-21", total:9803629 },
+  { periodo:"Octubre-21",    total:10537527 },
+  { periodo:"Noviembre-21",  total:10101537 },
+  { periodo:"Diciembre-21",  total:12720990 },
+  { periodo:"Enero-22",      total:19203850 },
+  { periodo:"Febrero-22",    total:14285398 },
+  { periodo:"Marzo-22",      total:11929904 },
+  { periodo:"Abril-22",      total:10938884 },
+  { periodo:"Mayo-22",       total:11580939 },
+  { periodo:"Junio-22",      total:13205856 },
+  { periodo:"Julio-22",      total:13610660 },
+  { periodo:"Agosto-22",     total:12266507 },
+  { periodo:"Septiembre-22", total:10828961 },
+  { periodo:"Octubre-22",    total:11438112 },
+  { periodo:"Noviembre-22",  total:10745011 },
+  { periodo:"Diciembre-22",  total:13193495 },
+  { periodo:"Enero-23",      total:19577354 },
+  { periodo:"Febrero-23",    total:15934696 },
+  { periodo:"Marzo-23",      total:14010824 },
+  { periodo:"Abril-23",      total:11330689 },
+  { periodo:"Mayo-23",       total:11692677 },
+  { periodo:"Junio-23",      total:12853868 },
+  { periodo:"Julio-23",      total:14255725 },
+  { periodo:"Agosto-23",     total:12536622 },
+  { periodo:"Septiembre-23", total:11657283 },
+  { periodo:"Octubre-23",    total:11488154 },
+  { periodo:"Noviembre-23",  total:10776198 },
+  { periodo:"Diciembre-23",  total:12811815 },
+  { periodo:"Enero-24",      total:19366077 },
+  { periodo:"Febrero-24",    total:16520492 },
+  { periodo:"Marzo-24",      total:12846197 },
+  { periodo:"Abril-24",      total:10782085 },
+  { periodo:"Mayo-24",       total:11837378 },
+  { periodo:"Junio-24",      total:11936013 },
+  { periodo:"Julio-24",      total:13714918 },
+  { periodo:"Agosto-24",     total:11980163 },
+  { periodo:"Septiembre-24", total:10384024 },
+  { periodo:"Octubre-24",    total:10847544 },
+  { periodo:"Noviembre-24",  total:10304049 },
+  { periodo:"Diciembre-24",  total:12584149 },
+  { periodo:"Enero-25",      total:19512631 },
+  { periodo:"Febrero-25",    total:16138664 },
+  { periodo:"Marzo-25",      total:12947965 },
+  { periodo:"Abril-25",      total:12316318 },
+  { periodo:"Mayo-25",       total:11392574 },
+  { periodo:"Junio-25",      total:12603133 },
   { periodo:"Julio-25",      pico:3479104, resto:7057960, valle:3226400, potPico:27545, potResto:23626, potValle:24628, total:13763464 },
   { periodo:"Agosto-25",     pico:3091912, resto:6241385, valle:2912931, potPico:25933, potResto:22002, potValle:22764, total:12246228 },
   { periodo:"Septiembre-25", pico:2783045, resto:5571692, valle:2652991, potPico:21786, potResto:18119, potValle:19328, total:11007728 },
@@ -237,14 +354,19 @@ const data = [
 ];
 
 const fmt = n => new Intl.NumberFormat('es-AR').format(Math.round(n));
+const fmtOrDash = n => (n == null ? '—' : fmt(n));
 const WINDOW_SIZE = 12; // meses que se muestran por defecto
 
 const cssVar = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
 Chart.defaults.color = '#4B5D6E';
 
-// Potencia máxima registrada por mes (mayor de las tres franjas)
-const potMax = d => Math.max(d.potPico, d.potResto, d.potValle);
+// Potencia máxima registrada por mes (mayor de las tres franjas). Devuelve null
+// si el mes no tiene datos de potencia (histórico previo a julio-2025).
+const potMax = d => {
+  if (d.potPico == null && d.potResto == null && d.potValle == null) return null;
+  return Math.max(d.potPico ?? -Infinity, d.potResto ?? -Infinity, d.potValle ?? -Infinity);
+};
 
 function parsePeriodo(p){
   const [monthName, yy] = p.split('-');
@@ -279,7 +401,7 @@ function renderDashboard(endIndex){
 
   const pct = (a,b) => ((a-b)/b*100);
   const deltaHtml = (a,b,label) => {
-    if (b == null) return '';
+    if (a == null || b == null) return '';
     const p = pct(a,b);
     const cls = p >= 0 ? 'up' : 'down';
     const arrow = p >= 0 ? '▲' : '▼';
@@ -294,17 +416,17 @@ function renderDashboard(endIndex){
     </div>
     <div class="kpi pico">
       <div class="label">Energía Pico</div>
-      <div class="value">${fmt(last.pico)}<span class="unit">kWh</span></div>
+      <div class="value">${fmtOrDash(last.pico)}<span class="unit">kWh</span></div>
       ${prev ? deltaHtml(last.pico, prev.pico, prev.periodo) : ''}
     </div>
     <div class="kpi resto">
       <div class="label">Energía Resto</div>
-      <div class="value">${fmt(last.resto)}<span class="unit">kWh</span></div>
+      <div class="value">${fmtOrDash(last.resto)}<span class="unit">kWh</span></div>
       ${prev ? deltaHtml(last.resto, prev.resto, prev.periodo) : ''}
     </div>
     <div class="kpi valle">
       <div class="label">Energía Valle</div>
-      <div class="value">${fmt(last.valle)}<span class="unit">kWh</span></div>
+      <div class="value">${fmtOrDash(last.valle)}<span class="unit">kWh</span></div>
       ${prev ? deltaHtml(last.valle, prev.valle, prev.periodo) : ''}
     </div>
   `;
@@ -434,13 +556,13 @@ function renderDashboard(endIndex){
   tbody.innerHTML = windowData.map(d => `
     <tr>
       <td>${d.periodo}</td>
-      <td>${fmt(d.pico)}</td>
-      <td>${fmt(d.resto)}</td>
-      <td>${fmt(d.valle)}</td>
+      <td>${fmtOrDash(d.pico)}</td>
+      <td>${fmtOrDash(d.resto)}</td>
+      <td>${fmtOrDash(d.valle)}</td>
       <td>${fmt(d.total)}</td>
-      <td>${fmt(d.potPico)}</td>
-      <td>${fmt(d.potResto)}</td>
-      <td>${fmt(d.potValle)}</td>
+      <td>${fmtOrDash(d.potPico)}</td>
+      <td>${fmtOrDash(d.potResto)}</td>
+      <td>${fmtOrDash(d.potValle)}</td>
     </tr>
   `).join('');
 }
