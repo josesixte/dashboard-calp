@@ -86,6 +86,13 @@
   }
   .legend-strip .chip{ display:flex; align-items:center; gap:6px; }
   .legend-strip .dot{ width:9px; height:9px; border-radius:2px; display:inline-block; }
+  .controls-row{ display:flex; align-items:center; gap:8px; margin-left:auto; }
+  .controls-row label{ color: var(--ink-soft); }
+  .controls-row select{
+    font-family:'IBM Plex Mono', monospace; font-size:12.5px; color: var(--ink);
+    background: var(--panel); border:1px solid var(--line); border-radius:6px;
+    padding:5px 8px; cursor:pointer;
+  }
 
   .panel{
     background: var(--panel); border:1px solid var(--line); border-radius: 12px;
@@ -134,7 +141,11 @@
     <span class="chip"><span class="dot" style="background:var(--pico)"></span>Pico</span>
     <span class="chip"><span class="dot" style="background:var(--resto)"></span>Resto</span>
     <span class="chip"><span class="dot" style="background:var(--valle)"></span>Valle</span>
-    <span style="margin-left:auto; opacity:0.7;">Energía en kWh · Potencia registrada en kW</span>
+    <span style="opacity:0.7;">Energía en kWh · Potencia registrada en kW</span>
+    <div class="controls-row">
+      <label for="periodEnd">Ver hasta</label>
+      <select id="periodEnd"></select>
+    </div>
   </div>
 
   <div class="kpi-row" id="kpiRow"></div>
@@ -160,11 +171,11 @@
     <div class="grid-2">
       <div>
         <div class="sub" style="margin-bottom:8px;">Energía (kWh)</div>
-        <div class="chart-box"><canvas id="chartYoYEnergy"></canvas></div>
+        <div class="chart-box" id="yoyEnergyBox"><canvas id="chartYoYEnergy"></canvas></div>
       </div>
       <div>
         <div class="sub" style="margin-bottom:8px;">Potencia máxima (kW)</div>
-        <div class="chart-box"><canvas id="chartYoYPower"></canvas></div>
+        <div class="chart-box" id="yoyPowerBox"><canvas id="chartYoYPower"></canvas></div>
       </div>
     </div>
   </div>
@@ -226,43 +237,7 @@ const data = [
 ];
 
 const fmt = n => new Intl.NumberFormat('es-AR').format(Math.round(n));
-const labels = data.map(d => d.periodo);
-
-document.getElementById('periodRange').textContent = `${data[0].periodo} — ${data[data.length-1].periodo}`;
-
-// KPIs (último mes vs mes anterior)
-const last = data[data.length-1];
-const prev = data[data.length-2];
-const pct = (a,b) => ((a-b)/b*100);
-const deltaHtml = (a,b,label) => {
-  const p = pct(a,b);
-  const cls = p >= 0 ? 'up' : 'down';
-  const arrow = p >= 0 ? '▲' : '▼';
-  return `<div class="delta ${cls}">${arrow} ${Math.abs(p).toFixed(1)}% vs ${label}</div>`;
-};
-
-document.getElementById('kpiRow').innerHTML = `
-  <div class="kpi total">
-    <div class="label">Total energía · ${last.periodo}</div>
-    <div class="value">${fmt(last.total)}<span class="unit">kWh</span></div>
-    ${deltaHtml(last.total, prev.total, prev.periodo)}
-  </div>
-  <div class="kpi pico">
-    <div class="label">Energía Pico</div>
-    <div class="value">${fmt(last.pico)}<span class="unit">kWh</span></div>
-    ${deltaHtml(last.pico, prev.pico, prev.periodo)}
-  </div>
-  <div class="kpi resto">
-    <div class="label">Energía Resto</div>
-    <div class="value">${fmt(last.resto)}<span class="unit">kWh</span></div>
-    ${deltaHtml(last.resto, prev.resto, prev.periodo)}
-  </div>
-  <div class="kpi valle">
-    <div class="label">Energía Valle</div>
-    <div class="value">${fmt(last.valle)}<span class="unit">kWh</span></div>
-    ${deltaHtml(last.valle, prev.valle, prev.periodo)}
-  </div>
-`;
+const WINDOW_SIZE = 12; // meses que se muestran por defecto
 
 const cssVar = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
@@ -271,155 +246,217 @@ Chart.defaults.color = '#4B5D6E';
 // Potencia máxima registrada por mes (mayor de las tres franjas)
 const potMax = d => Math.max(d.potPico, d.potResto, d.potValle);
 
-new Chart(document.getElementById('chartEnergyTotal'), {
-  type: 'bar',
-  data: {
-    labels,
-    datasets: [{ label:'Energía total', data: data.map(d=>d.total), backgroundColor: cssVar('--ink'), borderRadius:3 }]
-  },
-  options: {
-    responsive:true,
-    maintainAspectRatio:false,
-    plugins:{ legend:{ display:false } },
-    scales:{
-      x:{ grid:{ display:false } },
-      y:{ grid:{ color:'#EAEEF1' }, ticks:{ callback:v=>fmt(v) } }
-    }
-  }
-});
-
-new Chart(document.getElementById('chartPowerMax'), {
-  type: 'bar',
-  data: {
-    labels,
-    datasets: [{ label:'Potencia máxima', data: data.map(potMax), backgroundColor: cssVar('--pico'), borderRadius:3 }]
-  },
-  options: {
-    responsive:true,
-    maintainAspectRatio:false,
-    plugins:{ legend:{ display:false } },
-    scales:{
-      x:{ grid:{ display:false } },
-      y:{ grid:{ color:'#EAEEF1' }, ticks:{ callback:v=>fmt(v) } }
-    }
-  }
-});
-
-// ---- Comparación interanual: agrupa por nombre de mes, año actual vs año anterior ----
 function parsePeriodo(p){
   const [monthName, yy] = p.split('-');
   return { monthName, year: 2000 + parseInt(yy, 10) };
 }
-const byMonth = {};
-data.forEach(d => {
-  const { monthName, year } = parsePeriodo(d.periodo);
-  if(!byMonth[monthName]) byMonth[monthName] = {};
-  byMonth[monthName][year] = { total: d.total, potMax: potMax(d) };
-});
-// Meses que tienen datos de más de un año, en orden de aparición
 const monthOrder = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const comparable = monthOrder.filter(m => byMonth[m] && Object.keys(byMonth[m]).length >= 2);
 
-if (comparable.length === 0) {
-  document.getElementById('yoySub').textContent = 'Todavía no hay dos años cargados para el mismo mes — se completa automáticamente a medida que se suman meses.';
-  ['chartYoYEnergy','chartYoYPower'].forEach(id => {
-    document.getElementById(id).replaceWith(Object.assign(document.createElement('div'), {
-      style: 'padding:30px 0; text-align:center; color:var(--ink-soft); font-size:13px;',
-      textContent: 'Sin datos suficientes todavía'
-    }));
-  });
-} else {
-  const years = [...new Set(comparable.flatMap(m => Object.keys(byMonth[m])))].sort();
-  const yearColors = { 0: '#B9C4CC', 1: cssVar('--ink') }; // año anterior en gris, año actual en tinta
-
-  new Chart(document.getElementById('chartYoYEnergy'), {
-    type:'bar',
-    data:{
-      labels: comparable,
-      datasets: years.map((y,i) => ({
-        label: y,
-        data: comparable.map(m => byMonth[m][y] ? byMonth[m][y].total : null),
-        backgroundColor: yearColors[i] || cssVar('--resto')
-      }))
-    },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{ legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{size:11} } } },
-      scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'#EAEEF1' }, ticks:{ callback:v=>fmt(v) } } }
-    }
-  });
-
-  new Chart(document.getElementById('chartYoYPower'), {
-    type:'bar',
-    data:{
-      labels: comparable,
-      datasets: years.map((y,i) => ({
-        label: y,
-        data: comparable.map(m => byMonth[m][y] ? byMonth[m][y].potMax : null),
-        backgroundColor: yearColors[i] || cssVar('--resto')
-      }))
-    },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{ legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{size:11} } } },
-      scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'#EAEEF1' }, ticks:{ callback:v=>fmt(v) } } }
-    }
-  });
+let charts = {};
+function destroyCharts(){
+  Object.values(charts).forEach(c => c && c.destroy());
+  charts = {};
 }
 
-new Chart(document.getElementById('chartTotal'), {
-  type:'line',
-  data:{
-    labels,
-    datasets:[{
-      label:'Total energía',
-      data: data.map(d=>d.total),
-      borderColor: cssVar('--ink'),
-      backgroundColor: 'rgba(15,36,56,0.06)',
-      fill:true, tension:0.3, pointRadius:3, pointBackgroundColor: cssVar('--ink')
-    }]
-  },
-  options:{
-    responsive:true,
-    maintainAspectRatio:false,
-    plugins:{ legend:{ display:false } },
-    scales:{ y:{ grid:{ color:'#EAEEF1' }, ticks:{ callback:v=>fmt(v) } }, x:{ grid:{ display:false } } }
-  }
-});
+// Ventana de 12 meses que termina en el índice elegido (más antiguos si endIndex < último)
+function getWindow(endIndex){
+  const start = Math.max(0, endIndex - WINDOW_SIZE + 1);
+  return data.slice(start, endIndex + 1);
+}
 
-new Chart(document.getElementById('chartPower'), {
-  type:'line',
-  data:{
-    labels,
-    datasets:[
-      { label:'Pico',  data:data.map(d=>d.potPico),  borderColor: cssVar('--pico'),  tension:0.3, pointRadius:2 },
-      { label:'Resto', data:data.map(d=>d.potResto), borderColor: cssVar('--resto'), tension:0.3, pointRadius:2 },
-      { label:'Valle', data:data.map(d=>d.potValle), borderColor: cssVar('--valle'), tension:0.3, pointRadius:2 },
-    ]
-  },
-  options:{
-    responsive:true,
-    maintainAspectRatio:false,
-    plugins:{ legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{size:11} } } },
-    scales:{ y:{ grid:{ color:'#EAEEF1' }, ticks:{ callback:v=>fmt(v) } }, x:{ grid:{ display:false } } }
-  }
-});
+function resetYoyBoxes(){
+  document.getElementById('yoyEnergyBox').innerHTML = '<canvas id="chartYoYEnergy"></canvas>';
+  document.getElementById('yoyPowerBox').innerHTML = '<canvas id="chartYoYPower"></canvas>';
+}
 
-const tbody = document.querySelector('#dataTable tbody');
-tbody.innerHTML = data.map(d => `
-  <tr>
-    <td>${d.periodo}</td>
-    <td>${fmt(d.pico)}</td>
-    <td>${fmt(d.resto)}</td>
-    <td>${fmt(d.valle)}</td>
-    <td>${fmt(d.total)}</td>
-    <td>${fmt(d.potPico)}</td>
-    <td>${fmt(d.potResto)}</td>
-    <td>${fmt(d.potValle)}</td>
-  </tr>
-`).join('');
+function renderDashboard(endIndex){
+  const windowData = getWindow(endIndex);
+  const labels = windowData.map(d => d.periodo);
+  const last = windowData[windowData.length - 1];
+  const prev = windowData.length > 1 ? windowData[windowData.length - 2] : null;
+
+  document.getElementById('periodRange').textContent = `${windowData[0].periodo} — ${last.periodo}`;
+
+  const pct = (a,b) => ((a-b)/b*100);
+  const deltaHtml = (a,b,label) => {
+    if (b == null) return '';
+    const p = pct(a,b);
+    const cls = p >= 0 ? 'up' : 'down';
+    const arrow = p >= 0 ? '▲' : '▼';
+    return `<div class="delta ${cls}">${arrow} ${Math.abs(p).toFixed(1)}% vs ${label}</div>`;
+  };
+
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi total">
+      <div class="label">Total energía · ${last.periodo}</div>
+      <div class="value">${fmt(last.total)}<span class="unit">kWh</span></div>
+      ${prev ? deltaHtml(last.total, prev.total, prev.periodo) : ''}
+    </div>
+    <div class="kpi pico">
+      <div class="label">Energía Pico</div>
+      <div class="value">${fmt(last.pico)}<span class="unit">kWh</span></div>
+      ${prev ? deltaHtml(last.pico, prev.pico, prev.periodo) : ''}
+    </div>
+    <div class="kpi resto">
+      <div class="label">Energía Resto</div>
+      <div class="value">${fmt(last.resto)}<span class="unit">kWh</span></div>
+      ${prev ? deltaHtml(last.resto, prev.resto, prev.periodo) : ''}
+    </div>
+    <div class="kpi valle">
+      <div class="label">Energía Valle</div>
+      <div class="value">${fmt(last.valle)}<span class="unit">kWh</span></div>
+      ${prev ? deltaHtml(last.valle, prev.valle, prev.periodo) : ''}
+    </div>
+  `;
+
+  destroyCharts();
+
+  charts.energyTotal = new Chart(document.getElementById('chartEnergyTotal'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label:'Energía total', data: windowData.map(d=>d.total), backgroundColor: cssVar('--ink'), borderRadius:3 }] },
+    options: {
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{ legend:{ display:false } },
+      scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'#EAEEF1' }, ticks:{ callback:v=>fmt(v) } } }
+    }
+  });
+
+  charts.powerMax = new Chart(document.getElementById('chartPowerMax'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label:'Potencia máxima', data: windowData.map(potMax), backgroundColor: cssVar('--pico'), borderRadius:3 }] },
+    options: {
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{ legend:{ display:false } },
+      scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'#EAEEF1' }, ticks:{ callback:v=>fmt(v) } } }
+    }
+  });
+
+  // ---- Comparación interanual: usa TODO el historial para buscar el mismo mes
+  // en años anteriores, pero solo muestra los meses presentes en la ventana actual ----
+  resetYoyBoxes();
+  const byMonth = {};
+  data.forEach(d => {
+    const { monthName, year } = parsePeriodo(d.periodo);
+    if(!byMonth[monthName]) byMonth[monthName] = {};
+    byMonth[monthName][year] = { total: d.total, potMax: potMax(d) };
+  });
+  const windowMonthNames = windowData.map(d => parsePeriodo(d.periodo).monthName);
+  const comparable = monthOrder.filter(m => windowMonthNames.includes(m) && byMonth[m] && Object.keys(byMonth[m]).length >= 2);
+
+  if (comparable.length === 0) {
+    document.getElementById('yoySub').textContent = 'Todavía no hay dos años cargados para el mismo mes en este período.';
+    ['yoyEnergyBox','yoyPowerBox'].forEach(id => {
+      document.getElementById(id).innerHTML = '<div style="padding:30px 0; text-align:center; color:var(--ink-soft); font-size:13px;">Sin datos suficientes todavía</div>';
+    });
+  } else {
+    document.getElementById('yoySub').textContent = 'Mismo mes, año actual vs año anterior';
+    const years = [...new Set(comparable.flatMap(m => Object.keys(byMonth[m])))].sort();
+    const yearColors = { 0: '#B9C4CC', 1: cssVar('--ink') }; // año anterior en gris, año actual en tinta
+
+    charts.yoyEnergy = new Chart(document.getElementById('chartYoYEnergy'), {
+      type:'bar',
+      data:{
+        labels: comparable,
+        datasets: years.map((y,i) => ({
+          label: y,
+          data: comparable.map(m => byMonth[m][y] ? byMonth[m][y].total : null),
+          backgroundColor: yearColors[i] || cssVar('--resto')
+        }))
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{ legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{size:11} } } },
+        scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'#EAEEF1' }, ticks:{ callback:v=>fmt(v) } } }
+      }
+    });
+
+    charts.yoyPower = new Chart(document.getElementById('chartYoYPower'), {
+      type:'bar',
+      data:{
+        labels: comparable,
+        datasets: years.map((y,i) => ({
+          label: y,
+          data: comparable.map(m => byMonth[m][y] ? byMonth[m][y].potMax : null),
+          backgroundColor: yearColors[i] || cssVar('--resto')
+        }))
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{ legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{size:11} } } },
+        scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'#EAEEF1' }, ticks:{ callback:v=>fmt(v) } } }
+      }
+    });
+  }
+
+  charts.total = new Chart(document.getElementById('chartTotal'), {
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        label:'Total energía',
+        data: windowData.map(d=>d.total),
+        borderColor: cssVar('--ink'),
+        backgroundColor: 'rgba(15,36,56,0.06)',
+        fill:true, tension:0.3, pointRadius:3, pointBackgroundColor: cssVar('--ink')
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{ legend:{ display:false } },
+      scales:{ y:{ grid:{ color:'#EAEEF1' }, ticks:{ callback:v=>fmt(v) } }, x:{ grid:{ display:false } } }
+    }
+  });
+
+  charts.power = new Chart(document.getElementById('chartPower'), {
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        { label:'Pico',  data:windowData.map(d=>d.potPico),  borderColor: cssVar('--pico'),  tension:0.3, pointRadius:2 },
+        { label:'Resto', data:windowData.map(d=>d.potResto), borderColor: cssVar('--resto'), tension:0.3, pointRadius:2 },
+        { label:'Valle', data:windowData.map(d=>d.potValle), borderColor: cssVar('--valle'), tension:0.3, pointRadius:2 },
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{ legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{size:11} } } },
+      scales:{ y:{ grid:{ color:'#EAEEF1' }, ticks:{ callback:v=>fmt(v) } }, x:{ grid:{ display:false } } }
+    }
+  });
+
+  const tbody = document.querySelector('#dataTable tbody');
+  tbody.innerHTML = windowData.map(d => `
+    <tr>
+      <td>${d.periodo}</td>
+      <td>${fmt(d.pico)}</td>
+      <td>${fmt(d.resto)}</td>
+      <td>${fmt(d.valle)}</td>
+      <td>${fmt(d.total)}</td>
+      <td>${fmt(d.potPico)}</td>
+      <td>${fmt(d.potResto)}</td>
+      <td>${fmt(d.potValle)}</td>
+    </tr>
+  `).join('');
+}
+
+// ---- Selector de período: lista cada mes cargado, el más reciente primero ----
+const periodSel = document.getElementById('periodEnd');
+for (let i = data.length - 1; i >= 0; i--) {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = data[i].periodo;
+  periodSel.appendChild(opt);
+}
+periodSel.value = data.length - 1;
+periodSel.addEventListener('change', () => renderDashboard(parseInt(periodSel.value, 10)));
+
+renderDashboard(data.length - 1);
 </script>
 </body>
 </html>
