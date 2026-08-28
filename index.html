@@ -110,6 +110,14 @@
   canvas{ max-height: 340px; }
   .chart-box{ position: relative; height: 280px; }
 
+  .yoy-detail{
+    display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:12px;
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px;
+  }
+  .yoy-detail .item{ display:flex; align-items:center; gap:5px; color: var(--ink-soft); }
+  .yoy-detail .item b{ color: var(--ink); font-weight:600; }
+  .yoy-detail .delta{ font-size: 11.5px; margin-top:0; }
+
   table{ width:100%; border-collapse: collapse; font-family:'IBM Plex Mono', monospace; font-size: 12.5px; }
   th, td{ text-align:right; padding: 8px 10px; border-bottom: 1px solid var(--line); }
   th:first-child, td:first-child{ text-align:left; font-family:'IBM Plex Sans', sans-serif; }
@@ -172,10 +180,12 @@
       <div>
         <div class="sub" style="margin-bottom:8px;">Energía (kWh)</div>
         <div class="chart-box" id="yoyEnergyBox"><canvas id="chartYoYEnergy"></canvas></div>
+        <div class="yoy-detail" id="yoyEnergyDetail"></div>
       </div>
       <div>
         <div class="sub" style="margin-bottom:8px;">Potencia máxima (kW)</div>
         <div class="chart-box" id="yoyPowerBox"><canvas id="chartYoYPower"></canvas></div>
+        <div class="yoy-detail" id="yoyPowerDetail"></div>
       </div>
     </div>
   </div>
@@ -224,120 +234,120 @@
 // EDEA no desglosaba Pico/Resto/Valle ni potencia en esos registros). A partir de
 // julio-2025 los datos incluyen el desglose completo del cuadro mensual de EDEA.
 const data = [
-  { periodo:"Enero-16",      total:17275865 },
-  { periodo:"Febrero-16",    total:14602824 },
-  { periodo:"Marzo-16",      total:10847416 },
-  { periodo:"Abril-16",      total:10037696 },
-  { periodo:"Mayo-16",       total:9381391 },
-  { periodo:"Junio-16",      total:9419647 },
-  { periodo:"Julio-16",      total:10357521 },
-  { periodo:"Agosto-16",     total:9267503 },
-  { periodo:"Septiembre-16", total:8609071 },
-  { periodo:"Octubre-16",    total:9007589 },
-  { periodo:"Noviembre-16",  total:8814039 },
-  { periodo:"Diciembre-16",  total:11986422 },
-  { periodo:"Enero-17",      total:16976625 },
-  { periodo:"Febrero-17",    total:14282485 },
-  { periodo:"Marzo-17",      total:10545375 },
-  { periodo:"Abril-17",      total:9330222 },
-  { periodo:"Mayo-17",       total:9007085 },
-  { periodo:"Junio-17",      total:9214580 },
-  { periodo:"Julio-17",      total:10449747 },
-  { periodo:"Agosto-17",     total:9414043 },
-  { periodo:"Septiembre-17", total:8604409 },
-  { periodo:"Octubre-17",    total:9618527 },
-  { periodo:"Noviembre-17",  total:8810451 },
-  { periodo:"Diciembre-17",  total:11566867 },
-  { periodo:"Enero-18",      total:16561460 },
-  { periodo:"Febrero-18",    total:14365627 },
-  { periodo:"Marzo-18",      total:10475558 },
-  { periodo:"Abril-18",      total:9093940 },
-  { periodo:"Mayo-18",       total:8820631 },
-  { periodo:"Junio-18",      total:9050833 },
-  { periodo:"Julio-18",      total:10473763 },
-  { periodo:"Agosto-18",     total:9317706 },
-  { periodo:"Septiembre-18", total:8189558 },
-  { periodo:"Octubre-18",    total:8591539 },
-  { periodo:"Noviembre-18",  total:8730867 },
-  { periodo:"Diciembre-18",  total:11072474 },
-  { periodo:"Enero-19",      total:16480897 },
-  { periodo:"Febrero-19",    total:13648591 },
-  { periodo:"Marzo-19",      total:10352543 },
-  { periodo:"Abril-19",      total:8836100 },
-  { periodo:"Mayo-19",       total:8651012 },
-  { periodo:"Junio-19",      total:8751150 },
-  { periodo:"Julio-19",      total:10471956 },
-  { periodo:"Agosto-19",     total:9448558 },
-  { periodo:"Septiembre-19", total:8604096 },
-  { periodo:"Octubre-19",    total:8615000 },
-  { periodo:"Noviembre-19",  total:8507855 },
-  { periodo:"Diciembre-19",  total:10862627 },
-  { periodo:"Enero-20",      total:16519851 },
-  { periodo:"Febrero-20",    total:14602014 },
-  { periodo:"Marzo-20",      total:10198700 },
-  { periodo:"Abril-20",      total:7620117 },
-  { periodo:"Mayo-20",       total:8138327 },
-  { periodo:"Junio-20",      total:8550774 },
-  { periodo:"Julio-20",      total:9350181 },
-  { periodo:"Agosto-20",     total:8715027 },
-  { periodo:"Septiembre-20", total:8269382 },
-  { periodo:"Octubre-20",    total:8184553 },
-  { periodo:"Noviembre-20",  total:8318575 },
-  { periodo:"Diciembre-20",  total:11715258 },
-  { periodo:"Enero-21",      total:15935981 },
-  { periodo:"Febrero-21",    total:12648470 },
-  { periodo:"Marzo-21",      total:11331361 },
-  { periodo:"Abril-21",      total:9403489 },
-  { periodo:"Mayo-21",       total:10043305 },
-  { periodo:"Junio-21",      total:10347119 },
-  { periodo:"Julio-21",      total:12245877 },
-  { periodo:"Agosto-21",     total:11231951 },
-  { periodo:"Septiembre-21", total:9803629 },
-  { periodo:"Octubre-21",    total:10537527 },
-  { periodo:"Noviembre-21",  total:10101537 },
-  { periodo:"Diciembre-21",  total:12720990 },
-  { periodo:"Enero-22",      total:19203850 },
-  { periodo:"Febrero-22",    total:14285398 },
-  { periodo:"Marzo-22",      total:11929904 },
-  { periodo:"Abril-22",      total:10938884 },
-  { periodo:"Mayo-22",       total:11580939 },
-  { periodo:"Junio-22",      total:13205856 },
-  { periodo:"Julio-22",      total:13610660 },
-  { periodo:"Agosto-22",     total:12266507 },
-  { periodo:"Septiembre-22", total:10828961 },
-  { periodo:"Octubre-22",    total:11438112 },
-  { periodo:"Noviembre-22",  total:10745011 },
-  { periodo:"Diciembre-22",  total:13193495 },
-  { periodo:"Enero-23",      total:19577354 },
-  { periodo:"Febrero-23",    total:15934696 },
-  { periodo:"Marzo-23",      total:14010824 },
-  { periodo:"Abril-23",      total:11330689 },
-  { periodo:"Mayo-23",       total:11692677 },
-  { periodo:"Junio-23",      total:12853868 },
-  { periodo:"Julio-23",      total:14255725 },
-  { periodo:"Agosto-23",     total:12536622 },
-  { periodo:"Septiembre-23", total:11657283 },
-  { periodo:"Octubre-23",    total:11488154 },
-  { periodo:"Noviembre-23",  total:10776198 },
-  { periodo:"Diciembre-23",  total:12811815 },
-  { periodo:"Enero-24",      total:19366077 },
-  { periodo:"Febrero-24",    total:16520492 },
-  { periodo:"Marzo-24",      total:12846197 },
-  { periodo:"Abril-24",      total:10782085 },
-  { periodo:"Mayo-24",       total:11837378 },
-  { periodo:"Junio-24",      total:11936013 },
-  { periodo:"Julio-24",      total:13714918 },
-  { periodo:"Agosto-24",     total:11980163 },
-  { periodo:"Septiembre-24", total:10384024 },
-  { periodo:"Octubre-24",    total:10847544 },
-  { periodo:"Noviembre-24",  total:10304049 },
-  { periodo:"Diciembre-24",  total:12584149 },
-  { periodo:"Enero-25",      total:19512631 },
-  { periodo:"Febrero-25",    total:16138664 },
-  { periodo:"Marzo-25",      total:12947965 },
-  { periodo:"Abril-25",      total:12316318 },
-  { periodo:"Mayo-25",       total:11392574 },
-  { periodo:"Junio-25",      total:12603133 },
+  { periodo:"Enero-16",      total:17275865, potMax:38612 },
+  { periodo:"Febrero-16",    total:14602824, potMax:38524 },
+  { periodo:"Marzo-16",      total:10847416, potMax:26145 },
+  { periodo:"Abril-16",      total:10037696, potMax:22827 },
+  { periodo:"Mayo-16",       total:9381391,  potMax:20408 },
+  { periodo:"Junio-16",      total:9419647,  potMax:22347 },
+  { periodo:"Julio-16",      total:10357521, potMax:21293 },
+  { periodo:"Agosto-16",     total:9267503,  potMax:21258 },
+  { periodo:"Septiembre-16", total:8609071,  potMax:19096 },
+  { periodo:"Octubre-16",    total:9007589,  potMax:23189 },
+  { periodo:"Noviembre-16",  total:8814039,  potMax:21231 },
+  { periodo:"Diciembre-16",  total:11986422, potMax:32973 },
+  { periodo:"Enero-17",      total:16976625, potMax:41676 },
+  { periodo:"Febrero-17",    total:14282485, potMax:39290 },
+  { periodo:"Marzo-17",      total:10545375, potMax:26409 },
+  { periodo:"Abril-17",      total:9330222,  potMax:23227 },
+  { periodo:"Mayo-17",       total:9007085,  potMax:18202 },
+  { periodo:"Junio-17",      total:9214580,  potMax:18400 },
+  { periodo:"Julio-17",      total:10449747, potMax:21952 },
+  { periodo:"Agosto-17",     total:9414043,  potMax:20867 },
+  { periodo:"Septiembre-17", total:8604409,  potMax:18641 },
+  { periodo:"Octubre-17",    total:9618527,  potMax:26445 },
+  { periodo:"Noviembre-17",  total:8810451,  potMax:20828 },
+  { periodo:"Diciembre-17",  total:11566867, potMax:36067 },
+  { periodo:"Enero-18",      total:16561460, potMax:38024 },
+  { periodo:"Febrero-18",    total:14365627, potMax:34623 },
+  { periodo:"Marzo-18",      total:10475558, potMax:27563 },
+  { periodo:"Abril-18",      total:9093940,  potMax:22725 },
+  { periodo:"Mayo-18",       total:8820631,  potMax:19740 },
+  { periodo:"Junio-18",      total:9050833,  potMax:17773 },
+  { periodo:"Julio-18",      total:10473763, potMax:21200 },
+  { periodo:"Agosto-18",     total:9317706,  potMax:20353 },
+  { periodo:"Septiembre-18", total:8189558,  potMax:18329 },
+  { periodo:"Octubre-18",    total:8591539,  potMax:24735 },
+  { periodo:"Noviembre-18",  total:8730867,  potMax:22264 },
+  { periodo:"Diciembre-18",  total:11072474, potMax:31581 },
+  { periodo:"Enero-19",      total:16480897, potMax:43773 },
+  { periodo:"Febrero-19",    total:13648591, potMax:35581 },
+  { periodo:"Marzo-19",      total:10352543, potMax:28128 },
+  { periodo:"Abril-19",      total:8836100,  potMax:22149 },
+  { periodo:"Mayo-19",       total:8651012,  potMax:20549 },
+  { periodo:"Junio-19",      total:8751150,  potMax:22318 },
+  { periodo:"Julio-19",      total:10471956, potMax:24962 },
+  { periodo:"Agosto-19",     total:9448558,  potMax:19886 },
+  { periodo:"Septiembre-19", total:8604096,  potMax:17231 },
+  { periodo:"Octubre-19",    total:8615000,  potMax:18038 },
+  { periodo:"Noviembre-19",  total:8507855,  potMax:20413 },
+  { periodo:"Diciembre-19",  total:10862627, potMax:32122 },
+  { periodo:"Enero-20",      total:16519851, potMax:42420 },
+  { periodo:"Febrero-20",    total:14602014, potMax:36880 },
+  { periodo:"Marzo-20",      total:10198700, potMax:23422 },
+  { periodo:"Abril-20",      total:7620117,  potMax:16400 },
+  { periodo:"Mayo-20",       total:8138327,  potMax:14675 },
+  { periodo:"Junio-20",      total:8550774,  potMax:16196 },
+  { periodo:"Julio-20",      total:9350181,  potMax:16870 },
+  { periodo:"Agosto-20",     total:8715027,  potMax:19584 },
+  { periodo:"Septiembre-20", total:8269382,  potMax:19461 },
+  { periodo:"Octubre-20",    total:8184553,  potMax:15613 },
+  { periodo:"Noviembre-20",  total:8318575,  potMax:17940 },
+  { periodo:"Diciembre-20",  total:11715258, potMax:27646 },
+  { periodo:"Enero-21",      total:15935981, potMax:37924 },
+  { periodo:"Febrero-21",    total:12648470, potMax:29328 },
+  { periodo:"Marzo-21",      total:11331361, potMax:23524 },
+  { periodo:"Abril-21",      total:9403489,  potMax:23683 },
+  { periodo:"Mayo-21",       total:10043305, potMax:18338 },
+  { periodo:"Junio-21",      total:10347119, potMax:26669 },
+  { periodo:"Julio-21",      total:12245877, potMax:25322 },
+  { periodo:"Agosto-21",     total:11231951, potMax:23799 },
+  { periodo:"Septiembre-21", total:9803629,  potMax:22440 },
+  { periodo:"Octubre-21",    total:10537527, potMax:28034 },
+  { periodo:"Noviembre-21",  total:10101537, potMax:22977 },
+  { periodo:"Diciembre-21",  total:12720990, potMax:35068 },
+  { periodo:"Enero-22",      total:19203850, potMax:45448 },
+  { periodo:"Febrero-22",    total:14285398, potMax:33206 },
+  { periodo:"Marzo-22",      total:11929904, potMax:25180 },
+  { periodo:"Abril-22",      total:10938884, potMax:26699 },
+  { periodo:"Mayo-22",       total:11580939, potMax:22657 },
+  { periodo:"Junio-22",      total:13205856, potMax:29626 },
+  { periodo:"Julio-22",      total:13610660, potMax:26640 },
+  { periodo:"Agosto-22",     total:12266507, potMax:23876 },
+  { periodo:"Septiembre-22", total:10828961, potMax:22353 },
+  { periodo:"Octubre-22",    total:11438112, potMax:28330 },
+  { periodo:"Noviembre-22",  total:10745011, potMax:26055 },
+  { periodo:"Diciembre-22",  total:13193495, potMax:34331 },
+  { periodo:"Enero-23",      total:19577354, potMax:39825 },
+  { periodo:"Febrero-23",    total:15934696, potMax:40827 },
+  { periodo:"Marzo-23",      total:14010824, potMax:29722 },
+  { periodo:"Abril-23",      total:11330689, potMax:25077 },
+  { periodo:"Mayo-23",       total:11692677, potMax:26265 },
+  { periodo:"Junio-23",      total:12853868, potMax:27805 },
+  { periodo:"Julio-23",      total:14255725, potMax:29452 },
+  { periodo:"Agosto-23",     total:12536622, potMax:21583 },
+  { periodo:"Septiembre-23", total:11657283, potMax:25395 },
+  { periodo:"Octubre-23",    total:11488154, potMax:30461 },
+  { periodo:"Noviembre-23",  total:10776198, potMax:22907 },
+  { periodo:"Diciembre-23",  total:12811815, potMax:33774 },
+  { periodo:"Enero-24",      total:19366077, potMax:39802 },
+  { periodo:"Febrero-24",    total:16520492, potMax:39507 },
+  { periodo:"Marzo-24",      total:12846197, potMax:31973 },
+  { periodo:"Abril-24",      total:10782085, potMax:24760 },
+  { periodo:"Mayo-24",       total:11837378, potMax:22323 },
+  { periodo:"Junio-24",      total:11936013, potMax:28580 },
+  { periodo:"Julio-24",      total:13714918, potMax:25744 },
+  { periodo:"Agosto-24",     total:11980163, potMax:22292 },
+  { periodo:"Septiembre-24", total:10384024, potMax:21406 },
+  { periodo:"Octubre-24",    total:10847544, potMax:24471 },
+  { periodo:"Noviembre-24",  total:10304049, potMax:23218 },
+  { periodo:"Diciembre-24",  total:12584149, potMax:33708 },
+  { periodo:"Enero-25",      total:19512631, potMax:40937 },
+  { periodo:"Febrero-25",    total:16138664, potMax:40018 },
+  { periodo:"Marzo-25",      total:12947965, potMax:30237 },
+  { periodo:"Abril-25",      total:12316318, potMax:28946 },
+  { periodo:"Mayo-25",       total:11392574, potMax:22831 },
+  { periodo:"Junio-25",      total:12603133, potMax:26173 },
   { periodo:"Julio-25",      pico:3479104, resto:7057960, valle:3226400, potPico:27545, potResto:23626, potValle:24628, total:13763464 },
   { periodo:"Agosto-25",     pico:3091912, resto:6241385, valle:2912931, potPico:25933, potResto:22002, potValle:22764, total:12246228 },
   { periodo:"Septiembre-25", pico:2783045, resto:5571692, valle:2652991, potPico:21786, potResto:18119, potValle:19328, total:11007728 },
@@ -361,10 +371,11 @@ const cssVar = v => getComputedStyle(document.documentElement).getPropertyValue(
 Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
 Chart.defaults.color = '#4B5D6E';
 
-// Potencia máxima registrada por mes (mayor de las tres franjas). Devuelve null
-// si el mes no tiene datos de potencia (histórico previo a julio-2025).
+// Potencia máxima registrada por mes (mayor de las tres franjas). Los meses del
+// resumen histórico (2016 a junio-2025) solo traen el máximo ya calculado en
+// `potMax`, sin desglose por franja.
 const potMax = d => {
-  if (d.potPico == null && d.potResto == null && d.potValle == null) return null;
+  if (d.potPico == null && d.potResto == null && d.potValle == null) return d.potMax ?? null;
   return Math.max(d.potPico ?? -Infinity, d.potResto ?? -Infinity, d.potValle ?? -Infinity);
 };
 
@@ -389,6 +400,8 @@ function getWindow(endIndex){
 function resetYoyBoxes(){
   document.getElementById('yoyEnergyBox').innerHTML = '<canvas id="chartYoYEnergy"></canvas>';
   document.getElementById('yoyPowerBox').innerHTML = '<canvas id="chartYoYPower"></canvas>';
+  document.getElementById('yoyEnergyDetail').innerHTML = '';
+  document.getElementById('yoyPowerDetail').innerHTML = '';
 }
 
 function renderDashboard(endIndex){
@@ -455,8 +468,8 @@ function renderDashboard(endIndex){
     }
   });
 
-  // ---- Comparación interanual: usa TODO el historial para buscar el mismo mes
-  // en años anteriores, pero solo muestra los meses presentes en la ventana actual ----
+  // ---- Comparación interanual: cada mes de la ventana actual vs el mismo mes
+  // del año calendario anterior (no contra todos los años del historial) ----
   resetYoyBoxes();
   const byMonth = {};
   data.forEach(d => {
@@ -464,28 +477,42 @@ function renderDashboard(endIndex){
     if(!byMonth[monthName]) byMonth[monthName] = {};
     byMonth[monthName][year] = { total: d.total, potMax: potMax(d) };
   });
-  const windowMonthNames = windowData.map(d => parsePeriodo(d.periodo).monthName);
-  const comparable = monthOrder.filter(m => windowMonthNames.includes(m) && byMonth[m] && Object.keys(byMonth[m]).length >= 2);
 
-  if (comparable.length === 0) {
-    document.getElementById('yoySub').textContent = 'Todavía no hay dos años cargados para el mismo mes en este período.';
-    ['yoyEnergyBox','yoyPowerBox'].forEach(id => {
-      document.getElementById(id).innerHTML = '<div style="padding:30px 0; text-align:center; color:var(--ink-soft); font-size:13px;">Sin datos suficientes todavía</div>';
-    });
+  const yoyRows = windowData.map(d => {
+    const { monthName, year } = parsePeriodo(d.periodo);
+    const py = byMonth[monthName] ? byMonth[monthName][year - 1] : null;
+    return {
+      periodo: d.periodo,
+      monthName,
+      total: d.total,
+      potMax: potMax(d),
+      prevTotal: py ? py.total : null,
+      prevPotMax: py ? py.potMax : null,
+    };
+  });
+  const comparableEnergy = yoyRows.filter(r => r.prevTotal != null);
+  const comparablePower = yoyRows.filter(r => r.prevPotMax != null);
+
+  const pctChip = (label, curr, prev) => {
+    const p = pct(curr, prev);
+    const cls = p >= 0 ? 'up' : 'down';
+    const arrow = p >= 0 ? '▲' : '▼';
+    return `<span class="item"><b>${label}</b> <span class="delta ${cls}">${arrow} ${Math.abs(p).toFixed(1)}%</span></span>`;
+  };
+
+  if (comparableEnergy.length === 0) {
+    document.getElementById('yoySub').textContent = 'Todavía no hay datos del año anterior para los meses de este período.';
+    document.getElementById('yoyEnergyBox').innerHTML = '<div style="padding:30px 0; text-align:center; color:var(--ink-soft); font-size:13px;">Sin datos suficientes todavía</div>';
   } else {
-    document.getElementById('yoySub').textContent = 'Mismo mes, año actual vs año anterior';
-    const years = [...new Set(comparable.flatMap(m => Object.keys(byMonth[m])))].sort();
-    const yearColors = { 0: '#B9C4CC', 1: cssVar('--ink') }; // año anterior en gris, año actual en tinta
-
+    document.getElementById('yoySub').textContent = 'Cada mes de este período vs. el mismo mes del año anterior';
     charts.yoyEnergy = new Chart(document.getElementById('chartYoYEnergy'), {
       type:'bar',
       data:{
-        labels: comparable,
-        datasets: years.map((y,i) => ({
-          label: y,
-          data: comparable.map(m => byMonth[m][y] ? byMonth[m][y].total : null),
-          backgroundColor: yearColors[i] || cssVar('--resto')
-        }))
+        labels: comparableEnergy.map(r => r.monthName),
+        datasets: [
+          { label:'Año anterior', data: comparableEnergy.map(r => r.prevTotal), backgroundColor: '#B9C4CC' },
+          { label:'Actual',       data: comparableEnergy.map(r => r.total),     backgroundColor: cssVar('--ink') },
+        ]
       },
       options:{
         responsive:true,
@@ -494,16 +521,21 @@ function renderDashboard(endIndex){
         scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'#EAEEF1' }, ticks:{ callback:v=>fmt(v) } } }
       }
     });
+    document.getElementById('yoyEnergyDetail').innerHTML = comparableEnergy
+      .map(r => pctChip(r.monthName, r.total, r.prevTotal)).join('');
+  }
 
+  if (comparablePower.length === 0) {
+    document.getElementById('yoyPowerBox').innerHTML = '<div style="padding:30px 0; text-align:center; color:var(--ink-soft); font-size:13px;">Sin datos suficientes todavía</div>';
+  } else {
     charts.yoyPower = new Chart(document.getElementById('chartYoYPower'), {
       type:'bar',
       data:{
-        labels: comparable,
-        datasets: years.map((y,i) => ({
-          label: y,
-          data: comparable.map(m => byMonth[m][y] ? byMonth[m][y].potMax : null),
-          backgroundColor: yearColors[i] || cssVar('--resto')
-        }))
+        labels: comparablePower.map(r => r.monthName),
+        datasets: [
+          { label:'Año anterior', data: comparablePower.map(r => r.prevPotMax), backgroundColor: '#B9C4CC' },
+          { label:'Actual',       data: comparablePower.map(r => r.potMax),     backgroundColor: cssVar('--pico') },
+        ]
       },
       options:{
         responsive:true,
@@ -512,6 +544,8 @@ function renderDashboard(endIndex){
         scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'#EAEEF1' }, ticks:{ callback:v=>fmt(v) } } }
       }
     });
+    document.getElementById('yoyPowerDetail').innerHTML = comparablePower
+      .map(r => pctChip(r.monthName, r.potMax, r.prevPotMax)).join('');
   }
 
   charts.total = new Chart(document.getElementById('chartTotal'), {
