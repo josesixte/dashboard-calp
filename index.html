@@ -217,6 +217,8 @@
           <th>Pot. Pico</th>
           <th>Pot. Resto</th>
           <th>Pot. Valle</th>
+          <th>Pot. Contratada Pico</th>
+          <th>Pot. Contratada F. Pico</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -349,18 +351,19 @@ const data = [
   { periodo:"Mayo-25",       total:11392574, potMax:22831 },
   { periodo:"Junio-25",      total:12603133, potMax:26173 },
   { periodo:"Julio-25",      pico:3479104, resto:7057960, valle:3226400, potPico:27545, potResto:23626, potValle:24628, total:13763464 },
-  { periodo:"Agosto-25",     pico:3091912, resto:6241385, valle:2912931, potPico:25933, potResto:22002, potValle:22764, total:12246228 },
-  { periodo:"Septiembre-25", pico:2783045, resto:5571692, valle:2652991, potPico:21786, potResto:18119, potValle:19328, total:11007728 },
-  { periodo:"Octubre-25",    pico:2706503, resto:5391029, valle:2628117, potPico:26745, potResto:21026, potValle:22602, total:10725649 },
-  { periodo:"Noviembre-25",  pico:2757519, resto:5612240, valle:2730451, potPico:31148, potResto:24371, potValle:27127, total:11100210 },
-  { periodo:"Diciembre-25",  pico:3495646, resto:7406669, valle:3392301, potPico:45190, potResto:43618, potValle:36428, total:14294616 },
-  { periodo:"Enero-26",      pico:4827672, resto:9727111, valle:4636476, potPico:43763, potResto:39310, potValle:38036, total:19191259 },
-  { periodo:"Febrero-26",    pico:3875671, resto:7978704, valle:3794003, potPico:38971, potResto:32798, potValle:35049, total:15648378 },
-  { periodo:"Marzo-26",      pico:3152586, resto:6652922, valle:3165057, potPico:25479, potResto:20909, potValle:22053, total:12970565 },
-  { periodo:"Abril-26",      pico:2845307, resto:5752197, valle:2752361, potPico:26958, potResto:21760, potValle:22982, total:11349865 },
-  { periodo:"Mayo-26",       pico:3145513, resto:6294964, valle:2940542, potPico:24902, potResto:21447, potValle:21855, total:12381019 },
-  { periodo:"Junio-26",      pico:3096557, resto:6242442, valle:2864651, potPico:24697, potResto:23128, potValle:21996, total:12203650 },
-  { periodo:"Julio-26",      pico:3422430, resto:6931179, valle:3143449, potPico:25713, potResto:23758, potValle:22284, total:13497058 },
+  { periodo:"Agosto-25",     pico:3091912, resto:6241385, valle:2912931, potPico:25933, potResto:22002, potValle:22764, total:12246228, potConPico:7020,  potConFPico:7020 },
+  { periodo:"Septiembre-25", pico:2783045, resto:5571692, valle:2652991, potPico:21786, potResto:18119, potValle:19328, total:11007728, potConPico:7020,  potConFPico:7020 },
+  { periodo:"Octubre-25",    pico:2706503, resto:5391029, valle:2628117, potPico:26745, potResto:21026, potValle:22602, total:10725649, potConPico:7020,  potConFPico:7020 },
+  { periodo:"Noviembre-25",  pico:2757519, resto:5612240, valle:2730451, potPico:31148, potResto:24371, potValle:27127, total:11100210, potConPico:7020,  potConFPico:7020 },
+  { periodo:"Diciembre-25",  pico:3495646, resto:7406669, valle:3392301, potPico:45190, potResto:43618, potValle:36428, total:14294616, potConPico:40937, potConFPico:40937 },
+  { periodo:"Enero-26",      pico:4827672, resto:9727111, valle:4636476, potPico:43763, potResto:39310, potValle:38036, total:19191259, potConPico:30703, potConFPico:30703 },
+  { periodo:"Febrero-26",    pico:3875671, resto:7978704, valle:3794003, potPico:38971, potResto:32798, potValle:35049, total:15648378, potConPico:30703, potConFPico:30703 },
+  { periodo:"Marzo-26",      pico:3152586, resto:6652922, valle:3165057, potPico:25479, potResto:20909, potValle:22053, total:12970565, potConPico:30703, potConFPico:30703 },
+  { periodo:"Abril-26",      pico:2845307, resto:5752197, valle:2752361, potPico:26958, potResto:21760, potValle:22982, total:11349865, potConPico:30703, potConFPico:30703 },
+  { periodo:"Mayo-26",       pico:3145513, resto:6294964, valle:2940542, potPico:24902, potResto:21447, potValle:21855, total:12381019, potConPico:27545, potConFPico:27545 },
+  { periodo:"Junio-26",      pico:3096557, resto:6242442, valle:2864651, potPico:24697, potResto:23128, potValle:21996, total:12203650, potConPico:27545, potConFPico:27545 },
+  { periodo:"Julio-26",      pico:3422430, resto:6931179, valle:3143449, potPico:25713, potResto:23758, potValle:22284, total:13497058, potConPico:27545, potConFPico:27545 },
+  { periodo:"Agosto-26",     pico:3143307, resto:6321606, valle:2937027, potPico:24689, potResto:20665, potValle:21704, total:12401940, potConPico:27545, potConFPico:27545 },
 ];
 
 const fmt = n => new Intl.NumberFormat('es-AR').format(Math.round(n));
@@ -597,6 +600,8 @@ function renderDashboard(endIndex){
       <td>${fmtOrDash(d.potPico)}</td>
       <td>${fmtOrDash(d.potResto)}</td>
       <td>${fmtOrDash(d.potValle)}</td>
+      <td>${fmtOrDash(d.potConPico)}</td>
+      <td>${fmtOrDash(d.potConFPico)}</td>
     </tr>
   `).join('');
 }
